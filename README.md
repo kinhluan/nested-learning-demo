@@ -24,6 +24,20 @@ Demo minh họa **Nested Learning** - một paradigm học tập mới từ Goog
 3. **Continuum Memory System** - Bộ nhớ đa tần suất (fast/medium/slow)
 4. **Unified Architecture & Optimization** - Thống nhất kiến trúc và tối ưu hóa
 
+## Kết quả Demo
+
+### 1. Decision Boundaries (trực quan hóa vùng kiến thức)
+
+So sánh khả năng ghi nhớ kiến thức cũ giữa mạng thường và Nested Learning qua các task liên tiếp.
+
+![Decision Boundaries](nested_learning_boundaries.png)
+
+### 2. Performance & Memory (hiệu năng và bộ nhớ)
+
+Chi tiết về độ chính xác, hoạt động của Deep Optimizer và Continuum Memory System.
+
+![Performance Demo](nested_learning_demo.png)
+
 ## Chạy demo
 
 ### Google Colab

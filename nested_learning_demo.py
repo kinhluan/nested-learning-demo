@@ -531,6 +531,82 @@ def visualize_results(tasks: List[Task], results: Dict):
     print("=" * 70)
 
 
+def plot_decision_boundary(ax, model, X, y, title):
+    """Hàm helper để vẽ decision boundary"""
+    # Tạo lưới điểm
+    x_min, x_max = -3.0, 3.0
+    y_min, y_max = -3.0, 3.0
+    h = 0.05
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                         np.arange(y_min, y_max, h))
+
+    # Dự đoán trên toàn bộ lưới
+    grid_data = np.c_[xx.ravel(), yy.ravel()]
+    Z = model.forward(grid_data)
+    Z = Z.reshape(xx.shape)
+
+    # Vẽ contour
+    ax.contourf(xx, yy, Z, cmap=plt.cm.RdBu, alpha=0.8)
+    
+    # Vẽ data points
+    ax.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.RdBu, edgecolors='white', s=30)
+    
+    ax.set_title(title)
+    ax.set_xlim(xx.min(), xx.max())
+    ax.set_ylim(yy.min(), yy.max())
+
+
+def run_demo_with_boundary_visualization(n_epochs: int = 100):
+    """
+    Chạy demo và vẽ Decision Boundary sau mỗi task
+    để thấy rõ Catastrophic Forgetting vs Nested Learning
+    """
+    print("\n" + "=" * 70)
+    print("VISUALIZATION DEMO - Decision Boundaries")
+    print("=" * 70)
+
+    tasks = [generate_task_data(i) for i in range(3)]
+    simple_net = SimpleNetwork()
+    nested_net = NestedLearningNetwork()
+
+    # Setup plot: 2 rows (Simple vs Nested), 3 columns (Task 1, 2, 3)
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    fig.suptitle('Decision Boundary Evolution: Simple vs Nested Learning', fontsize=16, fontweight='bold')
+
+    # Row labels
+    pad = 5
+    axes[0, 0].annotate("Simple Network", xy=(0, 0.5), xytext=(-axes[0, 0].yaxis.labelpad - pad, 0),
+                        xycoords=axes[0, 0].yaxis.label, textcoords='offset points',
+                        size='large', ha='right', va='center', rotation=90, fontweight='bold')
+    axes[1, 0].annotate("Nested Learning", xy=(0, 0.5), xytext=(-axes[1, 0].yaxis.labelpad - pad, 0),
+                        xycoords=axes[1, 0].yaxis.label, textcoords='offset points',
+                        size='large', ha='right', va='center', rotation=90, fontweight='bold')
+
+    for task_idx, task in enumerate(tasks):
+        print(f"Training Task {task_idx + 1}: {task.name}...")
+
+        # Train both models
+        for _ in range(n_epochs):
+            simple_net.train_epoch(task.X, task.y)
+            nested_net.train_epoch(task.X, task.y)
+
+        # Consolidate for Nested Net
+        nested_net.consolidate_task(task)
+
+        # Plot Simple Network
+        plot_decision_boundary(axes[0, task_idx], simple_net, task.X, task.y,
+                             f"After Task {task_idx+1}\n({task.name})")
+
+        # Plot Nested Network
+        plot_decision_boundary(axes[1, task_idx], nested_net, task.X, task.y,
+                             f"After Task {task_idx+1}\n({task.name})")
+
+    plt.tight_layout()
+    plt.subplots_adjust(left=0.05) # Make room for row labels
+    plt.savefig('nested_learning_boundaries.png', dpi=150)
+    print("Visualization saved to: nested_learning_boundaries.png")
+
+
 def demonstrate_cms_detail():
     """Demo chi tiết hoạt động của Continuum Memory System"""
     print("\n" + "=" * 70)
@@ -588,6 +664,10 @@ def main():
     # Demo 3: Visualization
     print("\n[3/3] Creating Visualization...")
     visualize_results(tasks, results)
+
+    # Demo 4: Boundary Visualization (New)
+    print("\n[4/4] Creating Decision Boundary Visualization...")
+    run_demo_with_boundary_visualization()
 
     # Summary
     print("\n" + "=" * 70)
