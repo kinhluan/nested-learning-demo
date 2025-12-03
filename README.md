@@ -17,7 +17,7 @@ Demo minh họa **Nested Learning** - một paradigm học tập mới từ Goog
 | `nested_learning_demo.py` | Script Python độc lập |
 | `Nested Learning - Học Lồng Ghép.pdf` | Tài liệu Việt hóa |
 
-## 4 Điểm mạnh chính
+## 4 điểm mạnh chính
 
 1. **Catastrophic Forgetting** - Giải quyết vấn đề quên kiến thức cũ khi học task mới
 2. **Deep Optimizers** - Optimizer là memory module nén gradients
