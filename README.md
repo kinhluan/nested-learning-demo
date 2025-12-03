@@ -61,7 +61,6 @@ So sánh khả năng ghi nhớ kiến thức cũ giữa mạng thường và Nes
 ![Decision Boundaries](nested_learning_boundaries.png)
 
 > **Nhận xét:**
-
 > - **Hàng trên (Simple Network):** Khi chuyển sang học Task 2 (XOR), mô hình "quên sạch" Task 1 (Linear). Vùng phân chia (màu xanh/đỏ) thay đổi hoàn toàn để phục vụ task mới nhất. Đây là hiện tượng *Catastrophic Forgetting*.
 > - **Hàng dưới (Nested Learning):** Khi học Task 2 và 3, mô hình vẫn cố gắng duy trì cấu trúc phân chia của các task cũ. Vùng kiến thức cũ được bảo tồn tốt hơn nhờ cơ chế *Deep Optimizer* và *Continuum Memory*.
 
@@ -72,7 +71,6 @@ Chi tiết về độ chính xác, hoạt động của Deep Optimizer và Conti
 ![Performance Demo](nested_learning_demo.png)
 
 > **Nhận xét:**
-
 > - **Biểu đồ 1 (Accuracy):** Cột màu xanh (Nested) luôn cao hơn màu đỏ (Simple) ở cuối quá trình huấn luyện, cho thấy khả năng học task mới mà không đánh đổi kiến thức cũ.
 > - **Biểu đồ 4 (Memory System):** Đường màu xanh lá (Slow Memory) thay đổi rất chậm và mượt mà, đóng vai trò như bộ nhớ dài hạn. Đường màu đỏ (Fast Memory) bám sát tín hiệu đầu vào, đóng vai trò xử lý thông tin tức thời.
 
