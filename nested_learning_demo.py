@@ -57,7 +57,7 @@ def generate_task_data(task_id: int, n_samples: int = 100) -> Task:
 class SimpleNetwork:
     """Mạng neural đơn giản - baseline bị catastrophic forgetting"""
 
-    def __init__(self, input_dim: int = 2, hidden_dim: int = 16):
+    def __init__(self, input_dim: int = 2, hidden_dim: int = 64):
         self.W1 = np.random.randn(input_dim, hidden_dim) * 0.1
         self.b1 = np.zeros(hidden_dim)
         self.W2 = np.random.randn(hidden_dim, 1) * 0.1
@@ -65,7 +65,8 @@ class SimpleNetwork:
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         self.z1 = X @ self.W1 + self.b1
-        self.a1 = np.tanh(self.z1)
+        # Sử dụng ReLU thay vì Tanh để tạo các đường gấp khúc sắc nét hơn
+        self.a1 = np.maximum(0, self.z1) 
         self.z2 = self.a1 @ self.W2 + self.b2
         return 1 / (1 + np.exp(-self.z2))
 
@@ -79,7 +80,7 @@ class SimpleNetwork:
 
         # Hidden layer gradients
         da1 = dz2 @ self.W2.T
-        dz1 = da1 * (1 - self.a1**2)
+        dz1 = da1 * (self.z1 > 0).astype(float) # ReLU derivative
         dW1 = X.T @ dz1 / m
         db1 = np.mean(dz1, axis=0)
 
@@ -248,7 +249,7 @@ class NestedLearningNetwork:
     - Self-modifying weights (inspired by HOPE/Titans)
     """
 
-    def __init__(self, input_dim: int = 2, hidden_dim: int = 16):
+    def __init__(self, input_dim: int = 2, hidden_dim: int = 64):
         # Network weights
         self.W1 = np.random.randn(input_dim, hidden_dim) * 0.1
         self.b1 = np.zeros(hidden_dim)
@@ -269,7 +270,7 @@ class NestedLearningNetwork:
     def forward(self, X: np.ndarray) -> np.ndarray:
         # Hidden layer với CMS integration
         self.z1 = X @ self.W1 + self.b1
-        self.a1 = np.tanh(self.z1)
+        self.a1 = np.maximum(0, self.z1) # ReLU
 
         # Tích hợp memory từ CMS vào hidden representation
         batch_mean = np.mean(self.a1, axis=0)
@@ -291,31 +292,49 @@ class NestedLearningNetwork:
     def backward(self, X: np.ndarray, y: np.ndarray, y_pred: np.ndarray, lr: float = 0.1):
         m = X.shape[0]
 
-        # Compute gradients
+        # 1. Compute gradients from current task (Task-specific loss)
         dz2 = y_pred - y.reshape(-1, 1)
         dW2 = self.a1_modulated.T @ dz2 / m
         db2 = np.mean(dz2, axis=0)
 
         da1 = dz2 @ self.W2.T
-        dz1 = da1 * (1 - self.a1**2)
+        dz1 = da1 * (self.z1 > 0).astype(float) # ReLU derivative
         dW1 = X.T @ dz1 / m
         db1 = np.mean(dz1, axis=0)
 
-        # Sử dụng Deep Optimizer thay vì SGD đơn giản
+        # 2. Add Regularization from Memory (Knowledge Preservation)
+        # Nếu đã có kiến thức cũ, thêm "lực kéo" để giữ weights không đổi quá nhiều
+        reg_strength = 15.0  # Giảm xuống để mô hình linh hoạt hơn khi học task mới
+        
+        if self.task_memories:
+            # Lấy kiến thức gần nhất (hoặc trung bình các task cũ)
+            last_mem = self.task_memories[-1]
+            
+            # Tính gradient phạt: reg_strength * (current_weight - old_weight)
+            # Điều này tương đương với L2 regularization quanh điểm tối ưu cũ
+            dW1 += reg_strength * (self.W1 - last_mem['W1']) / m
+            dW2 += reg_strength * (self.W2 - last_mem['W2']) / m
+            # Bias thường ít quan trọng hơn nên có thể bỏ qua hoặc phạt nhẹ
+
+        # 3. Deep Optimizer Update
+        # Sử dụng Deep Optimizer để làm mượt gradient
         update_W1 = self.optimizer.compute_update(0, dW1)
         update_b1 = self.optimizer.compute_update(1, db1)
         update_W2 = self.optimizer.compute_update(2, dW2)
         update_b2 = self.optimizer.compute_update(3, db2)
 
-        # Apply updates
+        # 4. Apply updates
         self.W2 -= lr * update_W2
         self.b2 -= lr * update_b2
         self.W1 -= lr * update_W1
         self.b1 -= lr * update_b1
 
     def consolidate_task(self, task: Task):
-        """Lưu lại knowledge từ task hiện tại vào long-term memory"""
-        # Lưu trạng thái weights và CMS
+        """
+        Lưu lại knowledge từ task hiện tại vào long-term memory
+        Đây là bước quan trọng để tạo 'checkpoint' cho kiến thức
+        """
+        print(f"   [Consolidating knowledge from task: {task.name}]")
         self.task_memories.append({
             'W1': self.W1.copy(),
             'W2': self.W2.copy(),

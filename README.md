@@ -24,6 +24,14 @@ Demo minh họa **Nested Learning** - một paradigm học tập mới từ Goog
 3. **Continuum Memory System** - Bộ nhớ đa tần suất (fast/medium/slow)
 4. **Unified Architecture & Optimization** - Thống nhất kiến trúc và tối ưu hóa
 
+## Cập nhật kỹ thuật (Technical Updates)
+
+- **Kiến trúc mạng:** Sử dụng **ReLU** activation và **64 hidden units** (thay vì Tanh/16 units) để có thể học được các đường biên phức tạp (như hình tròn).
+- **Cơ chế bảo tồn (Consolidation):** Cài đặt cơ chế **Elastic Weight Consolidation (EWC)** đơn giản hóa.
+  - Khi chuyển task, mô hình lưu lại "snapshot" trọng số cũ.
+  - Thêm một `reg_strength` (lực kéo) vào hàm loss để ngăn trọng số mới đi quá xa so với trọng số cũ.
+  - Hiện tại `reg_strength = 15.0` để cân bằng giữa việc nhớ cũ (Stability) và học mới (Plasticity).
+
 ## Dữ liệu đầu vào (Input Data)
 
 Demo sử dụng 3 bài toán phân loại (Classification Tasks) khác nhau được học tuần tự để kiểm tra khả năng ghi nhớ:
@@ -62,7 +70,9 @@ So sánh khả năng ghi nhớ kiến thức cũ giữa mạng thường và Nes
 
 > **Nhận xét:**
 > - **Hàng trên (Simple Network):** Khi chuyển sang học Task 2 (XOR), mô hình "quên sạch" Task 1 (Linear). Vùng phân chia (màu xanh/đỏ) thay đổi hoàn toàn để phục vụ task mới nhất. Đây là hiện tượng *Catastrophic Forgetting*.
-> - **Hàng dưới (Nested Learning):** Khi học Task 2 và 3, mô hình vẫn cố gắng duy trì cấu trúc phân chia của các task cũ. Vùng kiến thức cũ được bảo tồn tốt hơn nhờ cơ chế *Deep Optimizer* và *Continuum Memory*.
+> - **Hàng dưới (Nested Learning):** Khi học Task 2 và 3, mô hình vẫn cố gắng duy trì cấu trúc phân chia của các task cũ.
+>   - Ở Task 3 (Circular), dù phải học hình tròn mới, bạn vẫn thấy bóng dáng các vệt màu của Task 2 (XOR) và Task 1 (Linear) ở nền.
+>   - Điều này chứng tỏ kiến thức cũ được bảo tồn nhờ cơ chế Regularization (dây thun ký ức).
 
 ### 2. Performance & Memory (hiệu năng và bộ nhớ)
 
