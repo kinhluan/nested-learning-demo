@@ -84,6 +84,25 @@ Chi tiết về độ chính xác, hoạt động của Deep Optimizer và Conti
 > - **Biểu đồ 1 (Accuracy):** Cột màu xanh (Nested) luôn cao hơn màu đỏ (Simple) ở cuối quá trình huấn luyện, cho thấy khả năng học task mới mà không đánh đổi kiến thức cũ.
 > - **Biểu đồ 4 (Memory System):** Đường màu xanh lá (Slow Memory) thay đổi rất chậm và mượt mà, đóng vai trò như bộ nhớ dài hạn. Đường màu đỏ (Fast Memory) bám sát tín hiệu đầu vào, đóng vai trò xử lý thông tin tức thời.
 
+### 3. Bảng đánh giá hiệu suất (Quantitative Evaluation)
+
+Kết quả chạy script `nested_learning_evaluation.py` trên tập dữ liệu kiểm thử (200 samples/task):
+
+| Model | Avg Accuracy | Backward Transfer (BWT) |
+|-------|--------------|-------------------------|
+| **Simple Network** | 63.67% | -33.50% (Quên nhiều) |
+| **Nested Learning** | **65.83%** | **-27.75%** (Quên ít hơn) |
+
+**Chi tiết độ chính xác sau khi học xong Task 3:**
+
+| Task | Simple Network | Nested Learning | Nhận xét |
+|------|----------------|-----------------|-----------|
+| Task 1 (Linear) | 51.50% | 48.50% | Cả 2 đều gặp khó khăn với task đầu tiên |
+| Task 2 (XOR) | 66.00% | **74.50%** | **Nested bảo tồn kiến thức tốt hơn hẳn (+8.5%)** |
+| Task 3 (Circular)| 73.50% | **74.50%** | Nested học task mới vẫn tốt |
+
+> **Kết luận:** Nested Learning chấp nhận hy sinh một chút ở task quá xa (Task 1) để giữ lại rất tốt kiến thức của task gần nhất (Task 2), giúp tổng thể hệ thống (Avg Accuracy) ổn định hơn và ít bị "quên" (BWT cao hơn).
+
 ## Chạy demo
 
 ### Google Colab
